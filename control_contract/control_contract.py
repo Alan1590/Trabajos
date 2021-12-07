@@ -5,7 +5,8 @@
 
 from odoo import models, api, fields, _
 from odoo.exceptions import ValidationError, Warning
-from datetime import datetime
+import datetime
+from dateutil.relativedelta import relativedelta
 
 import ast
 import logging
@@ -23,17 +24,24 @@ class control_contract(models.Model):
         ],default='normal')
 
     def exist_invoice(self,date_invoice,name_contract):
-        exist = self.env['account.move'].search_count([('&'),('date_invoice','=<',invoice_date),('invoice_origin','=',name_contract)])
+        exist = self.env['account.move'].search_count([('&'),
+            ('date_invoice','<=',date_invoice),('invoice_origin','=',name_contract)])
         return exist
 
     def control_invoices(self):
         all_contract = self.search([])
         for contract in all_contract:
-            invoice_date = contract.recurring_next_date  - datetime.timedelta(month=-1)
-            if exist_invoice(invoice_date,contract.name) == 0:
-                contract.state_control = 'failed_invoicse'
+            invoice_date = contract.recurring_next_date  - relativedelta(months=1)
+            if self.exist_invoice(invoice_date,contract.name) == 0:
+                contract.state_control = 'failed_invoice'
             else:
                 contract.state_control = 'normal'
+
+    @api.model
+    def recurring_create_invoice(self):
+        invoice = super(control_contract, self).recurring_create_invoice()
+        self.state_control = 'normal'
+        return invoice
 
 
 

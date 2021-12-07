@@ -19,7 +19,6 @@
     # always loaded
     'data': [
 #        'security/ir.model.access.csv',
-        'views/account_move_view_extend.xml',
-        'report/account_move_report_extend.xml',
+        'views/control_contract_view.xml',
     ],
 }
